@@ -11,8 +11,8 @@
   "packageManager": "bun@1.1.9",
   "private": true,
   "scripts": {
-  "build": "turbo run build",
-  "dev": "turbo run dev --filter=@compass/server --filter=compass --parallel",
+    "build": "turbo run build",
+    "dev": "bunx turbo run dev --filter=@socialos/web --output-logs=full --log-order=stream",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"

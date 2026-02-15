@@ -1,7 +1,12 @@
 "use client";
 
 import type * as React from "react";
-import { ChevronLeft, DraftingCompassIcon, Target } from "lucide-react";
+import {
+  ChevronLeft,
+  DraftingCompassIcon,
+  StretchHorizontal,
+  Target,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,19 +34,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar
       collapsible='icon'
-      variant='floating'
+      variant='sidebar'
       onClick={handleSidebarClick}
       className={`${
         !open ? "cursor-e-resize" : ""
-      } border border-border/40 dark:border-border/20 bg-background/95 dark:bg-background/90 backdrop-blur-sm rounded-2xl shadow-lg m-1  overflow-hidden`}
+      } border-r-8 border-r-[#b5b2b2e4] bg-background/95 dark:bg-[#161616] backdrop-blur-sm m-1  overflow-hidden`}
       {...props}>
-      <SidebarHeader className=' pb-4'>
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center  gap-3'>
-            <div className='flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-sky-600 shadow-lg dark:shadow-indigo-500/20'>
-              <DraftingCompassIcon size={20} />
+      <SidebarHeader>
+        <div className='flex items-center'>
+          <div className='flex items-center dark:bg-[#111010] p-2 rounded-3xl  w-full  gap-1'>
+            <div className='flex h-9 w-9 items-center justify-center rounded-xl  shadow-lg text-sidebar-primary-foreground'>
+              <StretchHorizontal size={24} />
             </div>
-            <span className='font-bold text-xl group-data-[collapsible=icon]:hidden bg-gradient-to-r from-indigo-600 to-sky-500 dark:from-indigo-400 dark:to-violet-300 bg-clip-text text-transparent'>
+            <span className='font-bold text-xl group-data-[collapsible=icon]:hidden text-foreground'>
               SocialOS
             </span>
           </div>
@@ -51,7 +56,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               size='icon'
               onClick={toggleSidebar}
               className={cn(
-                "h-8 w-8 rounded-lg transition-transform duration-300 hover:bg-accent/50",
+                "h-8 w-8 rounded-lg transition-transform duration-300 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                 open ? "" : "rotate-180",
               )}>
               <ChevronLeft className='h-4 w-4' />
@@ -59,8 +64,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </TooltipGlobal>
         </div>
       </SidebarHeader>
-
-      <SidebarContent className='py-2 space-y-2'>
+      <hr className='border-0 h-1 bg-white/10 my-4 w-full' />
+      <SidebarContent>
         <SidebarOptions />
       </SidebarContent>
 

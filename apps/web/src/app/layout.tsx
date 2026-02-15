@@ -3,8 +3,8 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
 export const metadata: Metadata = {
-  title: "Compass",
-  description: "Survey in one click",
+  title: "SocialOs",
+  description: "operating system for social media management",
 };
 
 export default function RootLayout({

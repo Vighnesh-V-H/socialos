@@ -40,7 +40,7 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size='lg'
-              className=' dark:bg-black bg-white dark:text-white text-black rounded-lg'>
+              className=' dark:bg-[#191919] bg-white dark:text-white text-black rounded-lg'>
               <Avatar className='h-8 w-8 rounded-lg'>
                 <AvatarImage
                   src={user?.image || ""}
@@ -56,7 +56,7 @@ export function NavUser() {
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className='w-[--radix-dropdown-menu-trigger-width] dark:bg-black  dark:text-white min-w-56 '
+            className='w-[--radix-dropdown-menu-trigger-width] dark:bg-[#191919]  dark:text-white min-w-56 '
             side={isMobile ? "bottom" : "right"}
             align='end'
             sideOffset={4}>
