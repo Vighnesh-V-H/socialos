@@ -1,7 +1,7 @@
-import { type LucideIcon } from "lucide-react";
+import React from "react";
 
 export type connection = {
   name: string;
-  icon: LucideIcon;
+  icon: React.ComponentType<React.ComponentProps<"svg">>;
   handler: () => void | Promise<void>;
 };

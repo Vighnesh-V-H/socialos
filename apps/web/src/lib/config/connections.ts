@@ -1,11 +1,11 @@
 import type { connection } from "@/types";
 import { linkedinConnctionHandler } from "../connections/handler";
-import { Linkedin } from "lucide-react";
+import { LinkedInIcon } from "@/components/icons";
 
 export const connections: connection[] = [
   {
     name: "linkedin",
-    icon: Linkedin,
+    icon: LinkedInIcon,
     handler: linkedinConnctionHandler,
   },
 ];

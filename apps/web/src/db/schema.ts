@@ -1,4 +1,11 @@
-import { boolean, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -53,11 +60,63 @@ export const verification = pgTable("verification", {
   value: text("value").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").$defaultFn(
-    () => /* @__PURE__ */ new Date()
+    () => /* @__PURE__ */ new Date(),
   ),
   updatedAt: timestamp("updated_at").$defaultFn(
-    () => /* @__PURE__ */ new Date()
+    () => /* @__PURE__ */ new Date(),
   ),
+});
+
+export const platformEnum = pgEnum("platform", [
+  "linkedin",
+  "instagram",
+  "twitter",
+]);
+
+export const post = pgTable("post", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  platform: platformEnum("platform").notNull(),
+  content: text("content").notNull(),
+  mediaUrl: text("media_url"),
+  platformPostId: text("platform_post_id"),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
+  updatedAt: timestamp("updated_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
+});
+
+export const postLike = pgTable("post_like", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  postId: uuid("post_id")
+    .notNull()
+    .references(() => post.id, { onDelete: "cascade" }),
+  likerName: text("liker_name").notNull(),
+  likerProfileUrl: text("liker_profile_url"),
+  likerAvatarUrl: text("liker_avatar_url"),
+  platform: platformEnum("platform").notNull(),
+  likedAt: timestamp("liked_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
+});
+
+export const postComment = pgTable("post_comment", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  postId: uuid("post_id")
+    .notNull()
+    .references(() => post.id, { onDelete: "cascade" }),
+  commenterName: text("commenter_name").notNull(),
+  commenterProfileUrl: text("commenter_profile_url"),
+  commenterAvatarUrl: text("commenter_avatar_url"),
+  content: text("content").notNull(),
+  platform: platformEnum("platform").notNull(),
+  commentedAt: timestamp("commented_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
 });
 
 export const schema = {
@@ -65,4 +124,7 @@ export const schema = {
   session,
   account,
   verification,
+  post,
+  postLike,
+  postComment,
 };

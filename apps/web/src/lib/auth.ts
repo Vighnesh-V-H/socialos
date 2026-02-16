@@ -25,8 +25,16 @@ export const auth = betterAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     },
     linkedin: {
+      prompt: "consent",
       clientId: process.env.LINKEDIN_CLIENT_ID!,
       clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
+    },
+  },
+  account: {
+    accountLinking: {
+      enabled: true,
+      allowDifferentEmails: true,
+      trustedProviders: ["linkedin"],
     },
   },
   advanced: {

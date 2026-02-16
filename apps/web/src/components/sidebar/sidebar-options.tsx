@@ -35,7 +35,7 @@ export function SidebarOptions() {
                       asChild
                       tooltip={item.title}
                       className={cn(
-                        "h-12 -mt-1  px-4 rounded-4xl  transition-all duration-200 group relative",
+                        "h-12  mt-0.5  px-4 rounded-4xl  transition-all duration-200 group relative",
                         "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                         "data-[active=true]:bg-[radial-gradient(circle_at_center_60%,#2222228f,#41414177)] data-[active=true]:text-sidebar-primary-foreground ",
                         "group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0",

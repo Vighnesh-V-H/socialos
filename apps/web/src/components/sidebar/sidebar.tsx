@@ -42,11 +42,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       {...props}>
       <SidebarHeader>
         <div className='flex items-center'>
-          <div className='flex items-center dark:bg-[#111010] p-2 rounded-3xl  w-full  gap-1'>
+          <div className='flex items-center dark:bg-[#242424] p-2 rounded-2xl   w-full  gap-1'>
             <div className='flex h-9 w-9 items-center justify-center rounded-xl  shadow-lg text-sidebar-primary-foreground'>
               <StretchHorizontal size={24} />
             </div>
-            <span className='font-bold text-xl group-data-[collapsible=icon]:hidden text-foreground'>
+            <span className='font-bold text-xl group-data-[collapsible=icon]:hidden text-[#d0d0d0]'>
               SocialOS
             </span>
           </div>
