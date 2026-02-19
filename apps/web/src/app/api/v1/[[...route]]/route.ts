@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { handle } from "hono/vercel";
 import { authGuard, type AuthUser } from "@/lib/middleware/auth-guard";
-import { PostService } from "@/services/post.service";
+import { PostService } from "@/lib/server/linkedin/post";
 import { getCache } from "@/lib/cache";
 import { createDb } from "@/db/index";
 import { parsePagination } from "@/lib/pagination";
