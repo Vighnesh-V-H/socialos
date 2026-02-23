@@ -1,5 +1,5 @@
 import { eq, desc, count, and } from "drizzle-orm";
-import { post, postLike, postComment } from "@/db/schema";
+import { post, postLike, postComment, account } from "@/db/schema";
 import type { DB } from "@/db/index";
 import type {
   CreatePostBody,
@@ -14,6 +14,13 @@ import { CacheKeys } from "@/lib/cache-keys";
 
 const CACHE_TTL = 120;
 
+type LinkedInPublishResult = {
+  platformPostId: string;
+  platformPostUrl: string;
+};
+
+const LINKEDIN_PROVIDER_ID = "linkedin";
+
 export class PostService {
   constructor(
     private db: DB,
@@ -21,13 +28,30 @@ export class PostService {
   ) {}
 
   async createPost(userId: string, body: CreatePostBody): Promise<Post> {
+    const normalizedContent = this.toPlainText(body.content);
+
+    if (!normalizedContent) {
+      throw new Error("Content is required");
+    }
+
+    let linkedinPublishResult: LinkedInPublishResult | null = null;
+
+    if (body.platform === "linkedin") {
+      linkedinPublishResult = await this.publishToLinkedIn(
+        userId,
+        normalizedContent,
+      );
+    }
+
     const [created] = await this.db
       .insert(post)
       .values({
         userId,
         platform: body.platform,
-        content: body.content,
+        content: normalizedContent,
         mediaUrl: body.mediaUrl ?? null,
+        platformPostId: linkedinPublishResult?.platformPostId ?? null,
+        platformPostUrl: linkedinPublishResult?.platformPostUrl ?? null,
       })
       .returning();
 
@@ -36,6 +60,106 @@ export class PostService {
     await this.cache.delPattern(CacheKeys.userPostsPattern(userId));
 
     return created;
+  }
+
+  private async publishToLinkedIn(
+    userId: string,
+    content: string,
+  ): Promise<LinkedInPublishResult> {
+    const linkedinAccount = await this.getLinkedInAccount(userId);
+    const accessToken = linkedinAccount.accessToken;
+    const memberId = linkedinAccount.accountId;
+
+    if (!accessToken) {
+      throw new Error("LinkedIn account is missing an access token");
+    }
+
+    if (!memberId) {
+      throw new Error("LinkedIn account is missing a member ID");
+    }
+
+    const response = await fetch("https://api.linkedin.com/v2/ugcPosts", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        "X-Restli-Protocol-Version": "2.0.0",
+      },
+      body: JSON.stringify({
+        author: `urn:li:person:${memberId}`,
+        lifecycleState: "PUBLISHED",
+        specificContent: {
+          "com.linkedin.ugc.ShareContent": {
+            shareCommentary: {
+              text: content,
+            },
+            shareMediaCategory: "NONE",
+          },
+        },
+        visibility: {
+          "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC",
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const rawError = await response.text().catch(() => "");
+      throw new Error(
+        rawError || `LinkedIn publish failed with status ${response.status}`,
+      );
+    }
+
+    const responseBody = (await response.json().catch(() => ({}))) as {
+      id?: string;
+    };
+
+    const platformPostId =
+      response.headers.get("x-restli-id") ?? responseBody.id ?? "";
+
+    if (!platformPostId) {
+      throw new Error(
+        "LinkedIn publish succeeded but post ID was not returned",
+      );
+    }
+
+    const platformPostUrl = `https://www.linkedin.com/feed/update/${encodeURIComponent(platformPostId)}`;
+
+    return {
+      platformPostId,
+      platformPostUrl,
+    };
+  }
+
+  private async getLinkedInAccount(userId: string) {
+    const rows = await this.db
+      .select({
+        accountId: account.accountId,
+        accessToken: account.accessToken,
+      })
+      .from(account)
+      .where(
+        and(
+          eq(account.userId, userId),
+          eq(account.providerId, LINKEDIN_PROVIDER_ID),
+        ),
+      )
+      .limit(1);
+
+    const linkedAccount = rows[0];
+
+    if (!linkedAccount) {
+      throw new Error("LinkedIn account is not connected");
+    }
+
+    return linkedAccount;
+  }
+
+  private toPlainText(content: string): string {
+    return content
+      .replace(/<[^>]*>/g, " ")
+      .replace(/&nbsp;/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim();
   }
 
   async getPostById(postId: string): Promise<PostWithEngagement | null> {

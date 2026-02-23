@@ -1,0 +1,1 @@
+ALTER TABLE "post" ADD COLUMN "platform_post_url" text;

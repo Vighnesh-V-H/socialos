@@ -1,8 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { format } from "date-fns";
+import { CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Card,
   CardContent,
@@ -11,6 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type QuillType from "quill";
 
@@ -22,7 +34,76 @@ export default function LinkedInPostEditor() {
 
   const [isReady, setIsReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [htmlContent, setHtmlContent] = useState("");
+  const [isScheduleDialogOpen, setIsScheduleDialogOpen] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>();
+  const [textContent, setTextContent] = useState("");
+
+  const selectedDateLabel = scheduledDate
+    ? format(scheduledDate, "PPP p")
+    : "No date and time selected";
+
+  const selectedDateValue = scheduledDate
+    ? `${scheduledDate.getFullYear()}-${String(scheduledDate.getMonth() + 1).padStart(2, "0")}-${String(scheduledDate.getDate()).padStart(2, "0")}`
+    : "";
+
+  const selectedTimeValue = scheduledDate
+    ? `${String(scheduledDate.getHours()).padStart(2, "0")}:${String(scheduledDate.getMinutes()).padStart(2, "0")}`
+    : "";
+
+  const handleDateInputChange = (value: string) => {
+    if (!value) {
+      setScheduledDate(undefined);
+      return;
+    }
+
+    const [year, month, day] = value.split("-").map(Number);
+    if (!year || !month || !day) return;
+
+    const base = scheduledDate ?? new Date();
+    setScheduledDate(
+      new Date(year, month - 1, day, base.getHours(), base.getMinutes(), 0, 0),
+    );
+  };
+
+  const handleTimeInputChange = (value: string) => {
+    if (!value) return;
+
+    const [hours, minutes] = value.split(":").map(Number);
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) return;
+
+    const base = scheduledDate ?? new Date();
+    setScheduledDate(
+      new Date(
+        base.getFullYear(),
+        base.getMonth(),
+        base.getDate(),
+        hours,
+        minutes,
+        0,
+        0,
+      ),
+    );
+  };
+
+  const handleCalendarSelect = (value: Date | undefined) => {
+    if (!value) {
+      setScheduledDate(undefined);
+      return;
+    }
+
+    const base = scheduledDate ?? new Date();
+    setScheduledDate(
+      new Date(
+        value.getFullYear(),
+        value.getMonth(),
+        value.getDate(),
+        base.getHours(),
+        base.getMinutes(),
+        0,
+        0,
+      ),
+    );
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -32,13 +113,10 @@ export default function LinkedInPostEditor() {
 
       const { default: Quill } = await import("quill");
 
-      // Verify ref again after await
       if (!editorContainerRef.current) return;
 
-      // Clear any existing content to prevent duplicates (especially in strict mode)
       editorContainerRef.current.innerHTML = "";
 
-      // Create a dedicated container for the editor
       const editorElement = document.createElement("div");
       editorContainerRef.current.appendChild(editorElement);
 
@@ -58,7 +136,7 @@ export default function LinkedInPostEditor() {
 
       quill.on("text-change", () => {
         const plainText = quill.getText().trim();
-        setHtmlContent(plainText.length > 0 ? quill.root.innerHTML : "");
+        setTextContent(plainText);
       });
 
       quillRef.current = quill;
@@ -81,7 +159,7 @@ export default function LinkedInPostEditor() {
   }, []);
 
   const handleSubmit = async () => {
-    const trimmedContent = htmlContent.trim();
+    const trimmedContent = textContent.trim();
 
     if (!trimmedContent) {
       toast.error("Please add post content before publishing.");
@@ -108,7 +186,7 @@ export default function LinkedInPostEditor() {
       }
 
       quillRef.current?.setContents([]);
-      setHtmlContent("");
+      setTextContent("");
       toast.success("LinkedIn post saved successfully.");
     } catch (error) {
       const message =
@@ -120,7 +198,7 @@ export default function LinkedInPostEditor() {
   };
 
   return (
-    <Card className='w-full max-w-3xl border dark:bg-[#1b1b1d]'>
+    <Card className='w-full max-w-3xl text-white border dark:bg-[#1b1b1d]'>
       <CardHeader>
         <CardTitle>LinkedIn Post Composer</CardTitle>
         <CardDescription className='dark:text-[#d3d3d3]'>
@@ -146,7 +224,16 @@ export default function LinkedInPostEditor() {
         </div>
       </CardContent>
 
-      <CardFooter className='justify-end'>
+      <CardFooter className='justify-end gap-2'>
+        <Button
+          type='button'
+          variant='outline'
+          onClick={() => setIsScheduleDialogOpen(true)}
+          className='rounded-md px-3 py-1 text-sm'>
+          <CalendarDays className='size-4' />
+          {scheduledDate ? format(scheduledDate, "PPP p") : "Schedule"}
+        </Button>
+
         <Button
           type='button'
           onClick={handleSubmit}
@@ -155,6 +242,58 @@ export default function LinkedInPostEditor() {
           {isSubmitting ? "Publishing..." : "Publish"}
         </Button>
       </CardFooter>
+
+      <Dialog
+        open={isScheduleDialogOpen}
+        onOpenChange={setIsScheduleDialogOpen}>
+        <DialogContent className='sm:max-w-[420px]'>
+          <DialogHeader>
+            <DialogTitle>Schedule Post</DialogTitle>
+            <DialogDescription>
+              Pick a date and time for your scheduled post.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className='space-y-3'>
+            <Calendar
+              mode='single'
+              selected={scheduledDate}
+              onSelect={handleCalendarSelect}
+              className='rounded-md border'
+            />
+
+            <div className='space-y-2'>
+              <Label htmlFor='schedule-date-input'>Selected Date & Time</Label>
+              <p className='text-sm text-muted-foreground'>
+                {selectedDateLabel}
+              </p>
+              <div className='grid gap-2 sm:grid-cols-2'>
+                <Input
+                  id='schedule-date-input'
+                  type='date'
+                  value={selectedDateValue}
+                  onChange={(e) => handleDateInputChange(e.target.value)}
+                />
+                <Input
+                  id='schedule-time-input'
+                  type='time'
+                  value={selectedTimeValue}
+                  onChange={(e) => handleTimeInputChange(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => setIsScheduleDialogOpen(false)}>
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

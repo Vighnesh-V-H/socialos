@@ -73,6 +73,12 @@ export const platformEnum = pgEnum("platform", [
   "twitter",
 ]);
 
+export const scheduledPostStatusEnum = pgEnum("scheduled_post_status", [
+  "pending",
+  "published",
+  "cancelled",
+]);
+
 export const post = pgTable("post", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: text("user_id")
@@ -82,6 +88,7 @@ export const post = pgTable("post", {
   content: text("content").notNull(),
   mediaUrl: text("media_url"),
   platformPostId: text("platform_post_id"),
+  platformPostUrl: text("platform_post_url"),
   createdAt: timestamp("created_at")
     .$defaultFn(() => new Date())
     .notNull(),
@@ -119,6 +126,23 @@ export const postComment = pgTable("post_comment", {
     .notNull(),
 });
 
+export const scheduledPost = pgTable("scheduled_post", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  platforms: platformEnum("platforms").array().notNull(),
+  scheduledAt: timestamp("scheduled_at").notNull(),
+  status: scheduledPostStatusEnum("status").notNull().default("pending"),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
+  updatedAt: timestamp("updated_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
+});
+
 export const schema = {
   user,
   session,
@@ -127,4 +151,5 @@ export const schema = {
   post,
   postLike,
   postComment,
+  scheduledPost,
 };
